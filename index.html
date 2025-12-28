@@ -1,0 +1,90 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ApiaryMaster</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              // Custom colors that map to CSS variables for theming
+              primary: 'var(--color-primary)',
+              'primary-hover': 'var(--color-primary-hover)',
+              background: 'var(--color-background)',
+              surface: 'var(--color-surface)',
+              text: 'var(--color-text)',
+              'text-muted': 'var(--color-text-muted)',
+              border: 'var(--color-border)',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+      
+      :root {
+        /* Standard Theme (Amber/Nature) */
+        --color-primary: #d97706; /* amber-600 */
+        --color-primary-hover: #b45309; /* amber-700 */
+        --color-background: #f8fafc; /* slate-50 */
+        --color-surface: #ffffff;
+        --color-text: #0f172a; /* slate-900 */
+        --color-text-muted: #64748b; /* slate-500 */
+        --color-border: #e2e8f0; /* slate-200 */
+      }
+
+      .theme-light {
+        /* Light/Clean Theme (Blue/Gray) */
+        --color-primary: #3b82f6; /* blue-500 */
+        --color-primary-hover: #2563eb; /* blue-600 */
+        --color-background: #ffffff;
+        --color-surface: #f3f4f6; /* gray-100 */
+        --color-text: #111827; /* gray-900 */
+        --color-text-muted: #6b7280; /* gray-500 */
+        --color-border: #d1d5db; /* gray-300 */
+      }
+
+      .theme-dark {
+        /* Dark Theme */
+        --color-primary: #fbbf24; /* amber-400 */
+        --color-primary-hover: #f59e0b; /* amber-500 */
+        --color-background: #0f172a; /* slate-900 */
+        --color-surface: #1e293b; /* slate-800 */
+        --color-text: #f1f5f9; /* slate-100 */
+        --color-text-muted: #94a3b8; /* slate-400 */
+        --color-border: #334155; /* slate-700 */
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--color-background);
+        color: var(--color-text);
+        transition: background-color 0.3s, color 0.3s;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.6"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
