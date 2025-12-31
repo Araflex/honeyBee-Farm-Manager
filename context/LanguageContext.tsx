@@ -438,7 +438,8 @@ const translations: Record<Language, Record<string, string>> = {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-export const LanguageProvider = ({ children }: { children: ReactNode }) => {
+// Fix: Made children optional to prevent TypeScript error when using nested JSX elements.
+export const LanguageProvider = ({ children }: { children?: ReactNode }) => {
   const [language, setLanguage] = useState<Language>('es'); 
 
   const t = (key: string) => {

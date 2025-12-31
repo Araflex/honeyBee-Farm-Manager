@@ -66,90 +66,74 @@ export enum ActionType {
 
 export type Theme = 'standard' | 'light' | 'dark';
 
-// API: Estructura para el registro de auditoría.
-// Backend debe generar 'id' y 'timestamp' automáticamente.
 export interface AuditLog {
-  id: string; // UUID
+  id: string;
   entityType: EntityType;
   entityId: string;
   action: ActionType;
   details: string;
-  performedBy: string; // ID o Nombre del usuario que realizó la acción
-  timestamp: string; // ISO 8601
+  performedBy: string;
+  timestamp: string;
 }
 
-// API: Estructura principal de una Colmena.
-// Requiere relación con Pallet (palletId).
 export interface Hive {
-  id: string; // UUID
-  palletId: string; // Foreign Key -> Pallets
-  chamberCount: number; // Int (1-4)
+  id: string;
+  palletId: string;
+  chamberCount: number;
   lidType: LidType;
   status: HiveStatus;
-  lastUpdated: string; // ISO Date
-  updatedBy: string; // Nombre de usuario
-  // Posición en el Pallet (0-3 para pallets de 4)
+  lastUpdated: string;
+  updatedBy: string;
   position?: number; 
-  // Detalles de la Reina (Pueden ser nulos si no hay info)
   queenStatus?: QueenStatus;
-  queenOrigin?: string; // String libre
-  queenInstallDate?: string; // ISO Date
+  queenOrigin?: string;
+  queenInstallDate?: string;
 }
 
-// API: Estructura de Pallet.
-// Requiere relación con Apiary (apiaryId).
 export interface Pallet {
-  id: string; // UUID
-  apiaryId: string; // Foreign Key -> Apiaries
-  code: string; // Código único visible (ej. P-001)
-  capacity: number; // Por defecto 4
+  id: string;
+  apiaryId: string;
+  code: string;
+  capacity: number;
 }
 
-// API: Estructura de Núcleo.
-// Requiere relación con Apiary (apiaryId).
 export interface Nucleus {
-  id: string; // UUID
-  apiaryId: string; // Foreign Key -> Apiaries
+  id: string;
+  apiaryId: string;
   status: NucleusStatus;
-  installDate: string; // ISO Date
-  lastUpdated: string; // ISO Date
+  installDate: string;
+  lastUpdated: string;
   updatedBy: string;
 }
 
-// API: Estructura de Apiario (Lugar físico).
 export interface Apiary {
-  id: string; // UUID
+  id: string;
   name: string;
-  area: string; // Zona o Región
-  location: string; // Coordenadas GPS o Dirección
-  honeyHarvestedKg: number; // Acumulativo calculado o almacenado
+  area: string;
+  location: string;
+  honeyHarvestedKg: number;
+  status?: 'Active' | 'Inactive'; // Nuevo campo para control de estado
 }
 
-// API: Registro de trabajo / Tareas.
-// Puede estar vinculado a un Apiario, un Pallet específico o un array de Colmenas.
 export interface WorkLog {
-  id: string; // UUID
-  apiaryId: string; // Foreign Key -> Apiaries
-  palletId?: string; // Foreign Key -> Pallets (Opcional)
-  hiveIds?: string[]; // Array of UUIDs (Opcional)
-  date: string; // ISO Date (Fecha programada)
+  id: string;
+  apiaryId: string;
+  palletId?: string;
+  hiveIds?: string[];
+  date: string;
   type: TaskType;
   description: string;
   status: TaskStatus;
-  assignedTo?: string; // Usuario asignado
-  completedBy?: string; // Usuario que completó
-  completedDate?: string; // ISO Date
-  // Específicos de Cosecha
+  assignedTo?: string;
+  completedBy?: string;
+  completedDate?: string;
   harvestedChambers?: number;
   harvestedFrames?: number;
-  // Específicos de Varroa
   varroaPercentage?: number;
 }
 
-// API: Usuario del sistema.
-// La contraseña NUNCA debe devolverse en el objeto User al frontend en producción.
 export interface User {
-  id: string; // UUID
+  id: string;
   username: string;
   name: string;
   lastname: string;
@@ -158,10 +142,10 @@ export interface User {
   dateOfBirth?: string;
   country?: string;
   phone?: string;
-  password?: string; // Solo para simulación/creación. En prod, hash.
+  password?: string;
   role: 'admin' | 'beekeeper';
   status: UserStatus;
-  theme?: Theme; // Preferencia de tema del usuario
+  theme?: Theme;
 }
 
 export interface AppState {

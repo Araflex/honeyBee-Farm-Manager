@@ -9,7 +9,8 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export const ThemeProvider = ({ children }: { children: ReactNode }) => {
+// Fix: Made children optional to prevent TypeScript error when using nested JSX elements.
+export const ThemeProvider = ({ children }: { children?: ReactNode }) => {
   const [theme, setTheme] = useState<Theme>('standard');
 
   useEffect(() => {

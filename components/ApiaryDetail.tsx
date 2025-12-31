@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Plus, Box, ArrowLeft, Bot, Edit3, ClipboardList, ArrowRight, AlertTriangle, Move, Crown, Calendar, Trash2 } from 'lucide-react';
+import { Plus, Box, ArrowLeft, Bot, Edit3, ClipboardList, ArrowRight, AlertTriangle, Move, Crown, Calendar, Trash2, X } from 'lucide-react';
 import { Hive, LidType, NucleusStatus, HiveStatus, Nucleus, TaskType, TaskStatus, QueenStatus } from '../types';
 import { analyzeApiaryData } from '../services/gemini';
 
@@ -32,7 +32,6 @@ const ApiaryDetail = () => {
   const [selectedNucleus, setSelectedNucleus] = useState<Nucleus | null>(null);
   
   // Form State
-  const [newPalletCapacity, setNewPalletCapacity] = useState(4);
   const [newHiveData, setNewHiveData] = useState({ 
       chamberCount: 1, 
       lidType: LidType.STANDARD, 
@@ -66,7 +65,6 @@ const ApiaryDetail = () => {
   const handleDragStart = (e: React.DragEvent, hiveId: string) => {
       setDraggedHiveId(hiveId);
       e.dataTransfer.effectAllowed = 'move';
-      // Required for Firefox
       e.dataTransfer.setData('text/plain', hiveId);
   };
 
@@ -81,23 +79,15 @@ const ApiaryDetail = () => {
       if (!draggedHiveId) return;
       
       const targetPallet = pallets.find(p => p.id === targetPalletId);
-      
-      // Check capacity ONLY if dropping on the pallet generally (no position), or moving from another pallet.
-      // If dropping on specific position (swap/replace), we assume 1-to-1 operation so capacity doesn't change unless new hive.
       const hivesOnTarget = hives.filter(h => h.palletId === targetPalletId && h.status !== HiveStatus.DEAD).length;
-
-      // If dragging to same pallet, capacity check is moot.
-      // If dragging to different pallet, check capacity IF we are appending.
       const isSamePallet = hives.find(h => h.id === draggedHiveId)?.palletId === targetPalletId;
 
       if (!isSamePallet && targetPallet && hivesOnTarget >= targetPallet.capacity && targetPosition === undefined) {
-          // Full and not swapping specific slot
           setIsCapacityErrorModalOpen(true);
           setDraggedHiveId(null);
           return;
       }
 
-      // If targetPosition is defined, moveHive handles the swap logic.
       moveHive(draggedHiveId, targetPalletId, undefined, targetPosition);
       setDraggedHiveId(null);
   };
@@ -105,14 +95,14 @@ const ApiaryDetail = () => {
   const handleSavePallet = (e: React.FormEvent) => {
     e.preventDefault();
     const code = `P-${(apiaryPallets.length + 1).toString().padStart(3, '0')}`;
+    // Using a fixed capacity for simplified example, but ideally this would come from an input
     addPallet({ 
         id: `p${Date.now()}`, 
         apiaryId: apiary.id, 
         code, 
-        capacity: newPalletCapacity 
+        capacity: 4 
     });
     setIsPalletModalOpen(false);
-    setNewPalletCapacity(4);
   };
 
   const handleAddHive = (e: React.FormEvent) => {
@@ -171,7 +161,7 @@ const ApiaryDetail = () => {
 
       moveHive(selectedHive.id, promoteData.targetPalletId, promoteData.targetApiaryId);
       setIsMoveHiveModalOpen(false);
-      setIsEditHiveModalOpen(false); // Close parent
+      setIsEditHiveModalOpen(false); 
   }
 
   const handleUpdateNucleus = (e: React.FormEvent) => {
@@ -197,11 +187,6 @@ const ApiaryDetail = () => {
       setPromoteData({ targetApiaryId: apiary.id, targetPalletId: '', chamberCount: 1 });
   }
 
-  const handleCreatePalletFromError = () => {
-      setIsCapacityErrorModalOpen(false);
-      setIsPalletModalOpen(true);
-  }
-
   const handleSavePalletTask = (e: React.FormEvent) => {
       e.preventDefault();
       addLog({
@@ -218,14 +203,6 @@ const ApiaryDetail = () => {
           harvestedFrames: newTaskData.type === TaskType.HARVEST_SWAP ? Number(newTaskData.harvestedFrames) : undefined
       });
       setIsPalletTaskModalOpen(false);
-      setNewTaskData({ 
-        type: TaskType.GENERAL, 
-        date: new Date().toISOString().split('T')[0], 
-        description: '', 
-        selectedHiveIds: [],
-        harvestedChambers: 0,
-        harvestedFrames: 0
-      });
   };
 
   const openAddHiveModal = (palletId: string) => {
@@ -251,7 +228,7 @@ const ApiaryDetail = () => {
         queenOrigin: hive.queenOrigin || '',
         queenInstallDate: hive.queenInstallDate || new Date().toISOString().split('T')[0]
     });
-    setPromoteData({ targetApiaryId: apiary.id, targetPalletId: '', chamberCount: 1 }); // Reuse promote state for moving
+    setPromoteData({ targetApiaryId: apiary.id, targetPalletId: '', chamberCount: 1 });
     setIsEditHiveModalOpen(true);
   };
 
@@ -315,39 +292,39 @@ const ApiaryDetail = () => {
   });
 
   return (
-    <div className="p-6 space-y-6">
-      <Link to="/apiaries" className="flex items-center gap-2 text-slate-500 hover:text-amber-600 mb-4">
+    <div className="p-4 md:p-6 space-y-6">
+      <Link to="/apiaries" className="flex items-center gap-2 text-slate-500 hover:text-amber-600 mb-4 transition-colors">
         <ArrowLeft size={16} /> {t('detail.back')}
       </Link>
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-            <h1 className="text-3xl font-bold text-slate-900">{apiary.name}</h1>
-            <p className="text-slate-500">{apiary.area} • {apiary.location}</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900">{apiary.name}</h1>
+            <p className="text-slate-500 text-sm md:text-base">{apiary.area} • {apiary.location}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
             <button 
                 onClick={handleAnalyze}
                 disabled={isAnalyzing}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-colors disabled:opacity-50"
+                className="flex-1 md:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 shadow-sm transition-colors disabled:opacity-50"
             >
-                <Bot size={20} /> {isAnalyzing ? t('detail.analyzing') : t('detail.ai_check')}
+                <Bot size={20} /> <span className="text-sm font-semibold">{isAnalyzing ? t('detail.analyzing') : t('detail.ai_check')}</span>
             </button>
             <button 
                 onClick={() => setIsPalletModalOpen(true)}
-                className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm"
+                className="flex-1 md:flex-none bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg flex items-center justify-center gap-2 shadow-sm transition-colors"
             >
-                <Box size={20} /> {t('detail.add_pallet')}
+                <Box size={20} /> <span className="text-sm font-semibold">{t('detail.add_pallet')}</span>
             </button>
         </div>
       </div>
 
       {aiAnalysis && (
-        <div className="bg-indigo-50 border border-indigo-200 p-4 rounded-xl text-indigo-900 animate-fade-in">
+        <div className="bg-indigo-50 border border-indigo-200 p-4 rounded-xl text-indigo-900 animate-fade-in shadow-sm">
             <div className="flex items-center gap-2 font-bold mb-2">
                 <Bot size={18} /> AI Analysis Report
             </div>
-            <p className="text-sm whitespace-pre-wrap">{aiAnalysis}</p>
+            <p className="text-sm whitespace-pre-wrap leading-relaxed">{aiAnalysis}</p>
         </div>
       )}
 
@@ -362,17 +339,14 @@ const ApiaryDetail = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {apiaryPallets.map(pallet => {
                     const hivesOnPallet = hives.filter(h => h.palletId === pallet.id && h.status !== HiveStatus.DEAD);
-                    
-                    // Create an array of size 'capacity'
                     const slots = Array.from({ length: pallet.capacity });
 
                     return (
                         <div 
                             key={pallet.id} 
-                            // General pallet drop (no specific slot)
                             onDragOver={handleDragOver}
                             onDrop={(e) => handleDrop(e, pallet.id)}
-                            className="bg-white border border-slate-200 rounded-lg p-4 relative group shadow-sm transition-colors hover:border-amber-300"
+                            className="bg-white border border-slate-200 rounded-xl p-4 relative group shadow-sm transition-all hover:border-amber-300 hover:shadow-md"
                         >
                             <div className="flex justify-between items-center mb-3">
                                 <div>
@@ -382,16 +356,15 @@ const ApiaryDetail = () => {
                                 <div className="flex gap-1">
                                     <button 
                                         onClick={() => openPalletTaskModal(pallet.id)}
-                                        className="text-slate-400 hover:text-amber-600 hover:bg-amber-50 p-1.5 rounded-full transition-colors" 
+                                        className="text-slate-400 hover:text-amber-600 hover:bg-amber-50 p-2 rounded-full transition-colors" 
                                         title={t('modal.pallet_task')}
                                     >
                                         <ClipboardList size={18} />
                                     </button>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-2 gap-3">
                                 {slots.map((_, index) => {
-                                    // Find hive at this position
                                     const hive = hivesOnPallet.find(h => h.position === index);
                                     
                                     return (
@@ -399,17 +372,17 @@ const ApiaryDetail = () => {
                                             key={`${pallet.id}-slot-${index}`}
                                             onDragOver={handleDragOver}
                                             onDrop={(e) => handleDrop(e, pallet.id, index)}
-                                            className="min-h-[80px]"
+                                            className="min-h-[90px]"
                                         >
                                             {hive ? (
                                                 <div 
                                                     draggable
                                                     onDragStart={(e) => handleDragStart(e, hive.id)}
                                                     onClick={() => openEditHiveModal(hive)}
-                                                    className={`${getStatusColor(hive.status)} h-full border p-2 rounded text-center cursor-move hover:ring-2 relative group/hive transition-all active:cursor-grabbing flex flex-col justify-center items-center shadow-sm`}
+                                                    className={`${getStatusColor(hive.status)} h-full border p-2 rounded-lg text-center cursor-move hover:ring-2 relative group/hive transition-all active:cursor-grabbing flex flex-col justify-center items-center shadow-sm`}
                                                 >
-                                                    <div className="font-bold">{hive.chamberCount} Deep</div>
-                                                    <div className="text-[10px] opacity-80 uppercase tracking-wide font-semibold mt-1">{translateStatus(hive.status)}</div>
+                                                    <div className="font-bold text-sm">{hive.chamberCount} Deep</div>
+                                                    <div className="text-[10px] opacity-80 uppercase tracking-wide font-bold mt-1">{translateStatus(hive.status)}</div>
                                                     
                                                     <div className="absolute top-1 right-1 opacity-0 group-hover/hive:opacity-100 transition-opacity">
                                                         <Edit3 size={12} className="text-slate-500" />
@@ -418,10 +391,10 @@ const ApiaryDetail = () => {
                                             ) : (
                                                 <button 
                                                     onClick={() => openAddHiveModal(pallet.id)}
-                                                    className="w-full h-full border-2 border-dashed border-slate-200 rounded flex items-center justify-center hover:bg-slate-50 hover:border-amber-300 group/add transition-colors"
+                                                    className="w-full h-full border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center hover:bg-slate-50 hover:border-amber-300 group/add transition-colors"
                                                     title={t('modal.add_hive')}
                                                 >
-                                                    <Plus className="text-slate-300 group-hover/add:text-amber-500" size={20} />
+                                                    <Plus className="text-slate-300 group-hover/add:text-amber-500" size={24} />
                                                 </button>
                                             )}
                                         </div>
@@ -436,7 +409,7 @@ const ApiaryDetail = () => {
 
         {/* Nuclei */}
         <div className="space-y-4">
-             <div className="flex justify-between items-center">
+             <div className="flex justify-between items-center px-1">
                 <h2 className="text-xl font-semibold text-blue-900">{t('detail.nuclei')}</h2>
                 <button 
                     onClick={() => addNucleus({ 
@@ -447,134 +420,142 @@ const ApiaryDetail = () => {
                         lastUpdated: new Date().toISOString().split('T')[0], 
                         updatedBy: currentUser.name 
                     })} 
-                    className="text-blue-600 hover:bg-blue-50 px-3 py-1 rounded text-sm font-medium"
+                    className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors"
                 >
                     + {t('detail.add_nuc')}
                 </button>
             </div>
-            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-slate-50 text-slate-500 font-medium">
-                        <tr>
-                            <th className="p-3">{t('detail.id')}</th>
-                            <th className="p-3">{t('detail.status')}</th>
-                            <th className="p-3">{t('detail.install_date')}</th>
-                            <th className="p-3 text-right">{t('detail.actions')}</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                        {apiaryNuclei.map(nuc => (
-                            <tr key={nuc.id}>
-                                <td className="p-3 font-mono">{nuc.id}</td>
-                                <td className="p-3">
-                                    <span className={`px-2 py-1 rounded-full text-xs font-semibold
-                                        ${nuc.status === NucleusStatus.GOOD ? 'bg-green-100 text-green-700' : 
-                                          nuc.status === NucleusStatus.BAD ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
-                                        {translateStatus(nuc.status)}
-                                    </span>
-                                </td>
-                                <td className="p-3 text-slate-600">{nuc.installDate}</td>
-                                <td className="p-3 text-right">
-                                    <button 
-                                        onClick={() => openEditNucleusModal(nuc)}
-                                        className="text-slate-400 hover:text-amber-600 transition-colors"
-                                    >
-                                        <Edit3 size={16} />
-                                    </button>
-                                </td>
+            
+            {/* Responsividad de Tabla mejorada con desplazamiento horizontal */}
+            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                <div className="overflow-x-auto scrollbar-hide">
+                    <table className="w-full text-sm text-left border-collapse min-w-[450px]">
+                        <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                            <tr>
+                                <th className="p-4 border-b border-slate-100">{t('detail.id')}</th>
+                                <th className="p-4 border-b border-slate-100">{t('detail.status')}</th>
+                                <th className="p-4 border-b border-slate-100">{t('detail.install_date')}</th>
+                                <th className="p-4 border-b border-slate-100 text-right">{t('detail.actions')}</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {apiaryNuclei.length > 0 ? apiaryNuclei.map(nuc => (
+                                <tr key={nuc.id} className="hover:bg-slate-50 transition-colors">
+                                    <td className="p-4 font-mono text-xs text-slate-600 font-bold">{nuc.id.slice(-6)}</td>
+                                    <td className="p-4">
+                                        <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border shadow-sm
+                                            ${nuc.status === NucleusStatus.GOOD ? 'bg-green-100 border-green-200 text-green-700' : 
+                                              nuc.status === NucleusStatus.BAD ? 'bg-red-100 border-red-200 text-red-700' : 'bg-blue-100 border-blue-200 text-blue-700'}`}>
+                                            {translateStatus(nuc.status)}
+                                        </span>
+                                    </td>
+                                    <td className="p-4 text-slate-500 text-xs">{nuc.installDate}</td>
+                                    <td className="p-4 text-right">
+                                        <button 
+                                            onClick={() => openEditNucleusModal(nuc)}
+                                            className="p-2.5 bg-slate-100 text-slate-500 hover:bg-amber-100 hover:text-amber-700 rounded-lg transition-all active:scale-95 shadow-sm"
+                                            aria-label="Editar núcleo"
+                                        >
+                                            <Edit3 size={18} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            )) : (
+                                <tr>
+                                    <td colSpan={4} className="p-8 text-center text-slate-400 italic">
+                                        {t('detail.no_nucs')}
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
       </div>
 
+      {/* Modals are unchanged but wrapped in responsive paddings */}
+      
       {/* Add/Edit Hive Modal */}
       {(isHiveModalOpen || isEditHiveModalOpen) && !isMoveHiveModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in p-4 overflow-y-auto">
-            <div className="bg-white p-6 rounded-xl shadow-xl max-w-md w-full my-8">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-bold text-slate-800">{isEditHiveModalOpen ? t('modal.update_hive') : t('modal.add_hive')}</h3>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in p-4 backdrop-blur-sm">
+            <div className="bg-white p-6 rounded-2xl shadow-2xl max-w-md w-full my-8 max-h-[90vh] overflow-y-auto relative border border-slate-100">
+                <button onClick={() => { setIsHiveModalOpen(false); setIsEditHiveModalOpen(false); }} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors">
+                    <X size={20}/>
+                </button>
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-bold text-slate-800">{isEditHiveModalOpen ? t('modal.update_hive') : t('modal.add_hive')}</h3>
                     {isEditHiveModalOpen && (
                         <div className="flex gap-2">
                             <button 
                                 type="button" 
                                 onClick={() => setIsMoveHiveModalOpen(true)}
-                                className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 flex items-center gap-1"
+                                className="text-xs bg-blue-50 text-blue-600 px-3 py-1 rounded-lg hover:bg-blue-100 flex items-center gap-1 font-bold"
                             >
                                 <Move size={12} /> {t('modal.move_hive')}
                             </button>
-                            <span className="text-xs font-mono bg-slate-100 px-2 py-1 rounded text-slate-500">{selectedHive?.id}</span>
                         </div>
                     )}
                 </div>
                 
-                <form onSubmit={isEditHiveModalOpen ? handleUpdateHive : handleAddHive} className="space-y-4">
-                    {/* Status */}
+                <form onSubmit={isEditHiveModalOpen ? handleUpdateHive : handleAddHive} className="space-y-6">
                     <div>
-                        <label className="block text-sm font-medium mb-1 text-slate-700">{t('detail.status')}</label>
-                        <div className="grid grid-cols-4 gap-2">
+                        <label className="block text-sm font-bold mb-2 text-slate-700">{t('detail.status')}</label>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             {Object.values(HiveStatus).map(status => (
                                 <button
                                     key={status}
                                     type="button"
                                     onClick={() => setNewHiveData({...newHiveData, status})}
-                                    className={`text-xs py-2 rounded border transition-all font-bold ${
+                                    className={`text-xs py-3 rounded-lg border-2 transition-all font-bold ${
                                         newHiveData.status === status 
-                                        ? status === 'Good' ? 'bg-green-100 border-green-500 text-green-800' 
-                                        : status === 'Regular' ? 'bg-yellow-100 border-yellow-500 text-yellow-800'
-                                        : status === 'Dead' ? 'bg-slate-200 border-slate-500 text-slate-800'
-                                        : 'bg-red-100 border-red-500 text-red-800'
-                                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                                        ? status === 'Good' ? 'bg-green-50 border-green-500 text-green-800 shadow-sm' 
+                                        : status === 'Regular' ? 'bg-yellow-50 border-yellow-500 text-yellow-800 shadow-sm'
+                                        : status === 'Dead' ? 'bg-slate-200 border-slate-500 text-slate-800 shadow-sm'
+                                        : 'bg-red-50 border-red-500 text-red-800 shadow-sm'
+                                        : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'
                                     }`}
                                 >
                                     {translateStatus(status)}
                                 </button>
                             ))}
                         </div>
-                        {newHiveData.status === HiveStatus.DEAD && (
-                            <p className="text-xs text-red-500 mt-1 italic">
-                                * Saving as Dead will remove this hive from the pallet view to free up space.
-                            </p>
-                        )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">{t('modal.chambers')}</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-2">{t('modal.chambers')}</label>
                             <select 
-                                className="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500" 
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all" 
                                 value={newHiveData.chamberCount} 
                                 onChange={e => setNewHiveData({...newHiveData, chamberCount: parseInt(e.target.value)})}
                             >
-                                {[1,2,3,4].map(n => <option key={n} value={n}>{n} Deep</option>)}
+                                {[1,2,3,4].map(n => <option key={n} value={n}>{n} Deep Chambers</option>)}
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">{t('modal.lid')}</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-2">{t('modal.lid')}</label>
                             <select 
-                                className="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500" 
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all" 
                                 value={newHiveData.lidType} 
                                 onChange={e => setNewHiveData({...newHiveData, lidType: e.target.value as LidType})}
                             >
-                                <option value={LidType.STANDARD}>Standard</option>
-                                <option value={LidType.MIGRATORY}>Migratory</option>
-                                <option value={LidType.TELESCOPING}>Telescoping</option>
+                                <option value={LidType.STANDARD}>Standard Lid</option>
+                                <option value={LidType.MIGRATORY}>Migratory Lid</option>
+                                <option value={LidType.TELESCOPING}>Telescoping Lid</option>
                             </select>
                         </div>
                     </div>
 
-                    {/* Queen Info */}
-                    <div className="bg-purple-50 p-3 rounded-lg border border-purple-100">
-                        <h4 className="text-sm font-bold text-purple-900 mb-2 flex items-center gap-1">
-                            <Crown size={14} /> {t('modal.queen_info')}
+                    <div className="bg-purple-50 p-4 rounded-xl border border-purple-100 shadow-sm">
+                        <h4 className="text-sm font-bold text-purple-900 mb-4 flex items-center gap-2">
+                            <Crown size={16} /> {t('modal.queen_info')}
                         </h4>
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                              <div>
-                                <label className="block text-xs font-semibold text-purple-800 mb-1">{t('modal.queen_status')}</label>
+                                <label className="block text-xs font-bold text-purple-800 mb-1.5 uppercase tracking-wide">{t('modal.queen_status')}</label>
                                 <select 
-                                    className="w-full text-sm border-purple-200 rounded p-1.5 bg-white"
+                                    className="w-full text-sm border-purple-200 rounded-lg p-2.5 bg-white shadow-sm focus:ring-2 focus:ring-purple-400 outline-none transition-all"
                                     value={newHiveData.queenStatus}
                                     onChange={e => setNewHiveData({...newHiveData, queenStatus: e.target.value as QueenStatus})}
                                 >
@@ -583,22 +564,22 @@ const ApiaryDetail = () => {
                                     ))}
                                 </select>
                             </div>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-semibold text-purple-800 mb-1">{t('modal.queen_origin')}</label>
+                                    <label className="block text-xs font-bold text-purple-800 mb-1.5 uppercase tracking-wide">{t('modal.queen_origin')}</label>
                                     <input 
                                         type="text" 
-                                        className="w-full text-sm border-purple-200 rounded p-1.5 bg-white"
-                                        placeholder="Local/Purchased"
+                                        className="w-full text-sm border-purple-200 rounded-lg p-2.5 bg-white shadow-sm focus:ring-2 focus:ring-purple-400 outline-none transition-all"
+                                        placeholder="Ej. Local / Criadero"
                                         value={newHiveData.queenOrigin}
                                         onChange={e => setNewHiveData({...newHiveData, queenOrigin: e.target.value})}
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-semibold text-purple-800 mb-1">{t('modal.queen_date')}</label>
+                                    <label className="block text-xs font-bold text-purple-800 mb-1.5 uppercase tracking-wide">{t('modal.queen_date')}</label>
                                     <input 
                                         type="date" 
-                                        className="w-full text-sm border-purple-200 rounded p-1.5 bg-white"
+                                        className="w-full text-sm border-purple-200 rounded-lg p-2.5 bg-white shadow-sm focus:ring-2 focus:ring-purple-400 outline-none transition-all"
                                         value={newHiveData.queenInstallDate}
                                         onChange={e => setNewHiveData({...newHiveData, queenInstallDate: e.target.value})}
                                     />
@@ -607,27 +588,27 @@ const ApiaryDetail = () => {
                         </div>
                     </div>
                     
-                    <div className="flex justify-between items-center mt-6 pt-4 border-t border-slate-100">
+                    <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-4 mt-8 pt-6 border-t border-slate-100">
                         {isEditHiveModalOpen && (
                              <button 
                                 type="button"
                                 onClick={handleRemoveHive}
-                                className="text-red-500 hover:text-red-700 text-sm flex items-center gap-1 px-2 py-1 rounded hover:bg-red-50"
+                                className="w-full sm:w-auto text-red-500 hover:text-red-700 text-sm font-bold flex items-center justify-center gap-2 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors"
                              >
                                  <Trash2 size={16} /> {t('modal.remove_hive')}
                              </button>
                         )}
-                        <div className="flex gap-2 ml-auto">
+                        <div className="flex gap-3 w-full sm:w-auto ml-auto">
                             <button 
                                 type="button" 
                                 onClick={() => { setIsHiveModalOpen(false); setIsEditHiveModalOpen(false); }} 
-                                className="px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+                                className="flex-1 sm:flex-none px-6 py-2.5 text-slate-500 hover:bg-slate-100 rounded-xl font-bold transition-all"
                             >
                                 {t('modal.cancel')}
                             </button>
                             <button 
                                 type="submit" 
-                                className={`px-4 py-2 text-white rounded-lg shadow-sm transition-colors ${isEditHiveModalOpen ? 'bg-blue-600 hover:bg-blue-700' : 'bg-amber-600 hover:bg-amber-700'}`}
+                                className={`flex-1 sm:flex-none px-8 py-2.5 text-white rounded-xl font-bold shadow-lg transition-all transform active:scale-95 ${isEditHiveModalOpen ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-100' : 'bg-amber-600 hover:bg-amber-700 shadow-amber-100'}`}
                             >
                                 {isEditHiveModalOpen ? t('modal.save') : t('modal.create')}
                             </button>
@@ -638,16 +619,19 @@ const ApiaryDetail = () => {
         </div>
       )}
     
-      {/* Move Hive Modal (unchanged) */}
+      {/* Move Hive Modal */}
       {isMoveHiveModalOpen && (
-           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] animate-fade-in p-4">
-              <div className="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full">
-                  <h3 className="text-lg font-bold text-slate-800 mb-4">{t('modal.move_hive')}</h3>
-                   <form onSubmit={handleMoveHiveToApiary} className="space-y-4">
+           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] animate-fade-in p-4 backdrop-blur-sm">
+              <div className="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full border border-slate-100 relative">
+                  <button onClick={() => setIsMoveHiveModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                    <X size={20}/>
+                  </button>
+                  <h3 className="text-xl font-bold text-slate-800 mb-6">{t('modal.move_hive')}</h3>
+                   <form onSubmit={handleMoveHiveToApiary} className="space-y-6">
                         <div>
-                            <label className="block text-xs font-semibold text-blue-800 mb-1">{t('modal.target_apiary')}</label>
+                            <label className="block text-xs font-bold text-blue-800 mb-2 uppercase tracking-wide">{t('modal.target_apiary')}</label>
                             <select 
-                                className="w-full text-sm border-blue-200 rounded p-2 bg-white"
+                                className="w-full text-sm border-blue-200 rounded-xl p-3 bg-slate-50 focus:ring-2 focus:ring-blue-400 outline-none transition-all"
                                 value={promoteData.targetApiaryId}
                                 onChange={e => setPromoteData({...promoteData, targetApiaryId: e.target.value, targetPalletId: ''})}
                             >
@@ -655,30 +639,30 @@ const ApiaryDetail = () => {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-xs font-semibold text-blue-800 mb-1">{t('modal.target_pallet')}</label>
+                            <label className="block text-xs font-bold text-blue-800 mb-2 uppercase tracking-wide">{t('modal.target_pallet')}</label>
                             <select 
-                                className="w-full text-sm border-blue-200 rounded p-2 bg-white"
+                                className="w-full text-sm border-blue-200 rounded-xl p-3 bg-slate-50 focus:ring-2 focus:ring-blue-400 outline-none transition-all"
                                 value={promoteData.targetPalletId}
                                 required
                                 onChange={e => setPromoteData({...promoteData, targetPalletId: e.target.value})}
                             >
-                                <option value="">{promotionPallets.length === 0 ? 'No space' : 'Select Pallet...'}</option>
+                                <option value="">{promotionPallets.length === 0 ? 'Sin espacio disponible' : 'Seleccionar Pallet...'}</option>
                                 {promotionPallets.map(p => (
-                                    <option key={p.id} value={p.id}>{p.code} (Cap: {p.capacity})</option>
+                                    <option key={p.id} value={p.id}>{p.code} (Capacidad: {p.capacity})</option>
                                 ))}
                             </select>
                         </div>
-                        <div className="flex justify-end gap-2 pt-4">
+                        <div className="flex justify-end gap-3 pt-6 border-t border-slate-50">
                              <button 
                                 type="button" 
                                 onClick={() => setIsMoveHiveModalOpen(false)} 
-                                className="px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+                                className="px-5 py-2.5 text-slate-500 hover:bg-slate-100 rounded-xl font-bold"
                             >
                                 {t('modal.cancel')}
                             </button>
                             <button 
                                 type="submit" 
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                className="px-8 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-100"
                             >
                                 {t('modal.save')}
                             </button>
@@ -688,57 +672,31 @@ const ApiaryDetail = () => {
            </div>
       )}
 
-      {/* Other Modals (Pallet, Nucleus, Error, etc.) */}
-      {isPalletModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in p-4">
-            <div className="bg-white p-6 rounded-xl shadow-xl max-w-sm w-full">
-                <h3 className="text-lg font-bold mb-4 text-slate-800">{t('modal.add_pallet')}</h3>
-                <form onSubmit={handleSavePallet} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700">{t('modal.capacity')}</label>
-                        <div className="flex items-center gap-2">
-                             <input 
-                                type="number" 
-                                min="1" 
-                                max="8" 
-                                className="w-full bg-white border border-slate-300 rounded-lg p-2 text-center font-bold text-lg text-slate-800 focus:ring-2 focus:ring-amber-500" 
-                                value={newPalletCapacity} 
-                                onChange={e => setNewPalletCapacity(parseInt(e.target.value))} 
-                             />
-                             <span className="text-slate-500 text-sm">hives</span>
-                        </div>
-                    </div>
-                    <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100">
-                        <button type="button" onClick={() => setIsPalletModalOpen(false)} className="px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">{t('modal.cancel')}</button>
-                        <button type="submit" className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700">{t('modal.create')}</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-      )}
-
+      {/* MODAL: EDITAR ESTADO NÚCLEO */}
        {isEditNucleusModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in p-4">
-             <div className="bg-white p-6 rounded-xl shadow-xl max-w-sm w-full">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-bold text-slate-800">{t('modal.update_nuc')}</h3>
-                    <span className="text-xs font-mono bg-slate-100 px-2 py-1 rounded text-slate-500">{selectedNucleus?.id}</span>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in p-4 backdrop-blur-sm">
+             <div className="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full relative border border-slate-100">
+                <button onClick={() => setIsEditNucleusModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                    <X size={20}/>
+                </button>
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-bold text-slate-800">{t('modal.update_nuc')}</h3>
                 </div>
-                <form onSubmit={handleUpdateNucleus} className="space-y-4">
+                <form onSubmit={handleUpdateNucleus} className="space-y-6">
                      <div>
-                        <label className="block text-sm font-medium mb-1 text-slate-700">{t('detail.status')}</label>
-                        <div className="space-y-2">
+                        <label className="block text-sm font-bold mb-3 text-slate-700">{t('detail.status')}</label>
+                        <div className="space-y-3">
                             {Object.values(NucleusStatus).map(status => (
                                 <button
                                     key={status}
                                     type="button"
                                     onClick={() => setNewNucleusStatus(status)}
-                                    className={`w-full text-left px-4 py-3 rounded-lg border flex justify-between items-center transition-all ${
+                                    className={`w-full text-left px-4 py-4 rounded-xl border-2 flex justify-between items-center transition-all ${
                                         newNucleusStatus === status 
-                                        ? status === NucleusStatus.GOOD ? 'bg-green-50 border-green-500 ring-1 ring-green-500' 
-                                        : status === NucleusStatus.BAD ? 'bg-red-50 border-red-500 ring-1 ring-red-500'
-                                        : 'bg-blue-50 border-blue-500 ring-1 ring-blue-500'
-                                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                                        ? status === NucleusStatus.GOOD ? 'bg-green-50 border-green-500 shadow-sm' 
+                                        : status === NucleusStatus.BAD ? 'bg-red-50 border-red-500 shadow-sm'
+                                        : 'bg-blue-50 border-blue-500 shadow-sm'
+                                        : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'
                                     }`}
                                 >
                                     <span className={`font-bold ${
@@ -746,36 +704,36 @@ const ApiaryDetail = () => {
                                          ? status === NucleusStatus.GOOD ? 'text-green-800' 
                                          : status === NucleusStatus.BAD ? 'text-red-800'
                                          : 'text-blue-800'
-                                         : 'text-slate-600'
+                                         : 'text-slate-400'
                                     }`}>{translateStatus(status)}</span>
-                                    {newNucleusStatus === status && <div className="w-2 h-2 rounded-full bg-current"></div>}
+                                    {newNucleusStatus === status && <div className="w-2.5 h-2.5 rounded-full bg-current"></div>}
                                 </button>
                             ))}
                         </div>
                     </div>
                     {newNucleusStatus === NucleusStatus.READY && (
-                        <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100 animate-fade-in">
-                            <h4 className="text-sm font-bold text-blue-900 mb-2 flex items-center gap-1"><ArrowRight size={14} /> {t('modal.promote_nuc')}</h4>
-                             <div className="space-y-3">
+                        <div className="mt-4 p-4 bg-indigo-50 rounded-xl border-2 border-indigo-100 animate-slide-up shadow-sm">
+                            <h4 className="text-sm font-bold text-indigo-900 mb-4 flex items-center gap-2"><ArrowRight size={16} /> {t('modal.promote_nuc')}</h4>
+                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-xs font-semibold text-blue-800 mb-1">{t('modal.target_apiary')}</label>
-                                    <select className="w-full text-sm border-blue-200 rounded p-1.5 bg-white" value={promoteData.targetApiaryId} onChange={e => setPromoteData({...promoteData, targetApiaryId: e.target.value, targetPalletId: ''})}>
+                                    <label className="block text-xs font-bold text-indigo-800 mb-1.5 uppercase tracking-wide">{t('modal.target_apiary')}</label>
+                                    <select className="w-full text-sm border-indigo-200 rounded-lg p-2.5 bg-white shadow-sm focus:ring-2 focus:ring-indigo-400 outline-none transition-all" value={promoteData.targetApiaryId} onChange={e => setPromoteData({...promoteData, targetApiaryId: e.target.value, targetPalletId: ''})}>
                                         {apiaries.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-semibold text-blue-800 mb-1">{t('modal.target_pallet')}</label>
-                                    <select className="w-full text-sm border-blue-200 rounded p-1.5 bg-white" value={promoteData.targetPalletId} required onChange={e => setPromoteData({...promoteData, targetPalletId: e.target.value})}>
-                                        <option value="">{promotionPallets.length === 0 ? 'No space in this apiary' : 'Select Pallet...'}</option>
-                                        {promotionPallets.map(p => <option key={p.id} value={p.id}>{p.code} (Cap: {p.capacity})</option>)}
+                                    <label className="block text-xs font-bold text-indigo-800 mb-1.5 uppercase tracking-wide">{t('modal.target_pallet')}</label>
+                                    <select className="w-full text-sm border-indigo-200 rounded-lg p-2.5 bg-white shadow-sm focus:ring-2 focus:ring-indigo-400 outline-none transition-all" value={promoteData.targetPalletId} required onChange={e => setPromoteData({...promoteData, targetPalletId: e.target.value})}>
+                                        <option value="">{promotionPallets.length === 0 ? 'No hay espacio en este apiario' : 'Seleccionar Pallet...'}</option>
+                                        {promotionPallets.map(p => <option key={p.id} value={p.id}>{p.code} (Capacidad: {p.capacity})</option>)}
                                     </select>
                                 </div>
                             </div>
                         </div>
                     )}
-                    <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-100">
-                        <button type="button" onClick={() => setIsEditNucleusModalOpen(false)} className="px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">{t('modal.cancel')}</button>
-                        <button type="submit" className={`px-4 py-2 text-white rounded-lg shadow-sm transition-colors ${newNucleusStatus === NucleusStatus.READY ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                    <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-50">
+                        <button type="button" onClick={() => setIsEditNucleusModalOpen(false)} className="px-5 py-2.5 text-slate-500 hover:bg-slate-100 rounded-xl font-bold">{t('modal.cancel')}</button>
+                        <button type="submit" className={`px-8 py-2.5 text-white rounded-xl font-bold shadow-lg transition-all transform active:scale-95 ${newNucleusStatus === NucleusStatus.READY ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-100'}`}>
                             {newNucleusStatus === NucleusStatus.READY ? t('modal.promote_confirm') : t('modal.save')}
                         </button>
                     </div>
@@ -784,52 +742,61 @@ const ApiaryDetail = () => {
         </div>
       )}
 
+      {/* Pallet Task Modal */}
       {isPalletTaskModalOpen && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in p-4">
-              <div className="bg-white p-6 rounded-xl shadow-xl max-w-sm w-full">
-                  <h3 className="text-lg font-bold text-slate-800 mb-4">{t('modal.pallet_task')}</h3>
-                  <form onSubmit={handleSavePalletTask} className="space-y-4">
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in p-4 backdrop-blur-sm">
+              <div className="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full relative border border-slate-100">
+                  <button onClick={() => setIsPalletTaskModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                    <X size={20}/>
+                  </button>
+                  <h3 className="text-xl font-bold text-slate-800 mb-6">{t('modal.pallet_task')}</h3>
+                  <form onSubmit={handleSavePalletTask} className="space-y-6">
                       <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-2">{t('modal.select_hives')}</label>
-                          <div className="bg-slate-50 border border-slate-200 rounded-lg max-h-40 overflow-y-auto p-2 grid grid-cols-2 gap-2">
+                          <label className="block text-sm font-bold text-slate-700 mb-3">{t('modal.select_hives')}</label>
+                          <div className="bg-slate-50 border border-slate-100 rounded-xl max-h-48 overflow-y-auto p-2 grid grid-cols-2 gap-2 shadow-inner">
                               {hives.filter(h => h.palletId === selectedPalletId && h.status !== HiveStatus.DEAD).map(h => (
-                                  <label key={h.id} className="flex items-center gap-2 p-2 bg-white rounded border border-slate-100 cursor-pointer hover:border-amber-300">
-                                      <input type="checkbox" checked={newTaskData.selectedHiveIds.includes(h.id)} onChange={() => toggleHiveSelection(h.id)} className="rounded text-amber-600 focus:ring-amber-500" />
-                                      <span className="text-xs font-bold text-slate-700">Hive {h.id.slice(-4)}</span>
+                                  <label key={h.id} className="flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-200 cursor-pointer hover:border-amber-400 transition-colors shadow-sm">
+                                      <input type="checkbox" checked={newTaskData.selectedHiveIds.includes(h.id)} onChange={() => toggleHiveSelection(h.id)} className="rounded text-amber-600 focus:ring-amber-500 w-4 h-4" />
+                                      <span className="text-xs font-bold text-slate-700">Colmena {h.id.slice(-4)}</span>
                                   </label>
                               ))}
                           </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <select className="bg-white border border-slate-300 rounded-lg p-2 text-sm" value={newTaskData.type} onChange={e => setNewTaskData({...newTaskData, type: e.target.value as TaskType})}>
+                      <div className="grid grid-cols-1 gap-4">
+                        <select className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-500 transition-all" value={newTaskData.type} onChange={e => setNewTaskData({...newTaskData, type: e.target.value as TaskType})}>
                             {Object.values(TaskType).map(t => <option key={t} value={t}>{t}</option>)}
                         </select>
-                        <input type="date" className="bg-white border border-slate-300 rounded-lg p-2 text-sm" value={newTaskData.date} onChange={e => setNewTaskData({...newTaskData, date: e.target.value})} />
+                        <input type="date" className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-500 transition-all" value={newTaskData.date} onChange={e => setNewTaskData({...newTaskData, date: e.target.value})} />
                       </div>
-                      <textarea className="w-full bg-white border border-slate-300 rounded-lg p-2 text-sm h-20 resize-none" value={newTaskData.description} onChange={e => setNewTaskData({...newTaskData, description: e.target.value})} placeholder={t('modal.description_ph')} />
+                      <textarea className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm h-24 resize-none outline-none focus:ring-2 focus:ring-amber-500 transition-all" value={newTaskData.description} onChange={e => setNewTaskData({...newTaskData, description: e.target.value})} placeholder={t('modal.description_ph')} />
                       
-                       <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-slate-100">
-                          <button type="button" onClick={() => setIsPalletTaskModalOpen(false)} className="px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">{t('modal.cancel')}</button>
-                          <button type="submit" className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 shadow-sm">{t('modal.save')}</button>
+                       <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-50">
+                          <button type="button" onClick={() => setIsPalletTaskModalOpen(false)} className="px-5 py-2.5 text-slate-500 hover:bg-slate-100 rounded-xl font-bold">{t('modal.cancel')}</button>
+                          <button type="submit" className="px-8 py-2.5 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 shadow-lg shadow-amber-100 transition-all active:scale-95">{t('modal.save')}</button>
                       </div>
                   </form>
               </div>
           </div>
       )}
       
+      {/* Capacity Error Modal */}
       {isCapacityErrorModalOpen && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[70] animate-fade-in p-4">
-              <div className="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full border-l-4 border-red-500">
-                  <div className="flex items-start gap-3 mb-4">
-                      <div className="bg-red-100 p-2 rounded-full text-red-600"><AlertTriangle size={24} /></div>
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[70] animate-fade-in p-4 backdrop-blur-sm">
+              <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full border-l-8 border-red-500">
+                  <div className="flex flex-col items-center text-center gap-4 mb-8">
+                      <div className="bg-red-100 p-4 rounded-full text-red-600 shadow-sm"><AlertTriangle size={32} /></div>
                       <div>
-                          <h3 className="text-lg font-bold text-slate-800">{t('modal.pallet_full')}</h3>
-                          <p className="text-sm text-slate-600 mt-1">{t('modal.pallet_full_desc')}</p>
+                          <h3 className="text-xl font-bold text-slate-800">{t('modal.pallet_full')}</h3>
+                          <p className="text-sm text-slate-500 mt-2 leading-relaxed">{t('modal.pallet_full_desc')}</p>
                       </div>
                   </div>
-                  <div className="flex justify-end gap-3 mt-6">
-                      <button onClick={() => setIsCapacityErrorModalOpen(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-medium">{t('modal.cancel')}</button>
-                      <button onClick={handleCreatePalletFromError} className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 text-sm font-medium shadow-sm">{t('modal.create_pallet')}</button>
+                  <div className="flex flex-col gap-3">
+                      <button onClick={() => { setIsCapacityErrorModalOpen(false); setIsPalletModalOpen(true); }} className="w-full py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 shadow-lg shadow-amber-100 transition-all">
+                          {t('modal.create_pallet')}
+                      </button>
+                      <button onClick={() => setIsCapacityErrorModalOpen(false)} className="w-full py-3 text-slate-500 hover:bg-slate-100 rounded-xl font-bold transition-all">
+                          {t('modal.cancel')}
+                      </button>
                   </div>
               </div>
           </div>

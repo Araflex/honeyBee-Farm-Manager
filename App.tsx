@@ -16,7 +16,8 @@ import UserManagement from './components/UserManagement';
 import PasswordRecovery from './components/PasswordRecovery';
 import AuditLogView from './components/AuditLogView';
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+// Fix: Made children optional to prevent TypeScript error when using nested JSX elements.
+const ProtectedRoute = ({ children }: { children?: React.ReactNode }) => {
     const { currentUser } = useApp();
     if (!currentUser) {
         return <Navigate to="/login" replace />;

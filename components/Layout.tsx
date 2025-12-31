@@ -5,7 +5,8 @@ import { LayoutDashboard, Map, ClipboardList, Bug, Menu, X, User as UserIcon, Us
 import { useApp } from '../context/AppContext';
 import { useLanguage } from '../context/LanguageContext';
 
-const Layout = ({ children }: { children: React.ReactNode }) => {
+// Fix: Made children optional to prevent TypeScript error when using nested JSX elements.
+const Layout = ({ children }: { children?: React.ReactNode }) => {
   const { pathname } = useLocation();
   const { currentUser, logout } = useApp();
   const { t, language, setLanguage } = useLanguage();
