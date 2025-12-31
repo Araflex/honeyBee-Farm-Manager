@@ -9,6 +9,7 @@ import Dashboard from './components/Dashboard';
 import ApiaryList from './components/ApiaryList';
 import ApiaryDetail from './components/ApiaryDetail';
 import WorkLogView from './components/WorkLogView';
+import VarroaControlView from './components/VarroaControlView';
 import Assistant from './components/Assistant';
 import UserProfile from './components/UserProfile';
 import Login from './components/Login';
@@ -41,6 +42,7 @@ const App = () => {
                 <Route path="/apiaries" element={<ProtectedRoute><ApiaryList /></ProtectedRoute>} />
                 <Route path="/apiaries/:id" element={<ProtectedRoute><ApiaryDetail /></ProtectedRoute>} />
                 <Route path="/logs" element={<ProtectedRoute><WorkLogView /></ProtectedRoute>} />
+                <Route path="/varroa" element={<ProtectedRoute><VarroaControlView /></ProtectedRoute>} />
                 <Route path="/assistant" element={<ProtectedRoute><Assistant /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
                 <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />

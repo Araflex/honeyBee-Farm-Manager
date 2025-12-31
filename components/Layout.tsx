@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Map, ClipboardList, Bug, Menu, X, User as UserIcon, Users, LogOut, Globe, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Map, ClipboardList, Bug, Menu, X, User as UserIcon, Users, LogOut, Globe, ShieldCheck, Microscope } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -24,6 +24,7 @@ const Layout = ({ children }: { children?: React.ReactNode }) => {
     { label: t('nav.assistant'), path: '/assistant', icon: <Bug size={20} /> },
     { label: t('nav.dashboard'), path: '/', icon: <LayoutDashboard size={20} /> },
     { label: t('nav.apiaries'), path: '/apiaries', icon: <Map size={20} /> },
+    { label: t('nav.varroa'), path: '/varroa', icon: <Microscope size={20} /> },
     { label: t('nav.logs'), path: '/logs', icon: <ClipboardList size={20} /> },
   ];
 

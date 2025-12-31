@@ -23,12 +23,31 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.dashboard': 'Dashboard',
     'nav.apiaries': 'Apiaries',
     'nav.logs': 'Work Logs',
+    'nav.varroa': 'Varroa Control',
     'nav.assistant': 'AI Assistant',
     'nav.users': 'Users',
     'nav.audit': 'Audit Log',
     'nav.profile': 'Profile',
     'nav.logout': 'Sign Out',
     
+    // Varroa
+    'varroa.title': 'Varroa Infestation Control',
+    'varroa.subtitle': 'Record and calculate mite infestation rates.',
+    'varroa.bees_count': 'Total Bees Sampled',
+    'varroa.mites_count': 'Mites Found',
+    'varroa.infestation_rate': 'Infestation Rate',
+    'varroa.notes': 'Observations / Notes',
+    'varroa.save': 'Save Record',
+    'varroa.select_hive': 'Select Hive',
+    'varroa.success': 'Record saved successfully',
+
+    // Tasks Management in ApiaryDetail
+    'detail.tasks_title': 'Tasks & Operations',
+    'detail.add_task': 'New Task',
+    'detail.no_tasks': 'No tasks scheduled for this apiary.',
+    'detail.edit_task': 'Edit Task',
+    'detail.confirm_delete_task': 'Are you sure you want to delete this task?',
+
     // Dashboard
     'dash.welcome': 'Hello',
     'dash.schedule': 'Here is your schedule for today.',
@@ -90,6 +109,7 @@ const translations: Record<Language, Record<string, string>> = {
     'status.active': 'Active',
     'status.disabled': 'Disabled',
     'status.pending': 'Pending',
+    'status.completed': 'Completed',
     
     // Queen Status
     'queen.virgin': 'Virgin',
@@ -235,13 +255,33 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.dashboard': 'Panel',
     'nav.apiaries': 'Apiarios',
     'nav.logs': 'Registros',
+    'nav.varroa': 'Control Varroa',
     'nav.assistant': 'Asistente IA',
     'nav.users': 'Usuarios',
     'nav.audit': 'Auditoría',
     'nav.profile': 'Perfil',
     'nav.logout': 'Salir',
 
+    // Varroa
+    'varroa.title': 'Control de Infestación por Varroa',
+    'varroa.subtitle': 'Registra y calcula los niveles de infestación.',
+    'varroa.bees_count': 'Total de Abejas de la Muestra',
+    'varroa.mites_count': 'Ácaros Encontrados',
+    'varroa.infestation_rate': 'Tasa de Infestación',
+    'varroa.notes': 'Observaciones / Notas',
+    'varroa.save': 'Guardar Registro',
+    'varroa.select_hive': 'Seleccionar Colmena',
+    'varroa.success': 'Registro guardado con éxito',
+
+    // Tasks Management in ApiaryDetail
+    'detail.tasks_title': 'Tareas y Operaciones',
+    'detail.add_task': 'Nueva Tarea',
+    'detail.no_tasks': 'No hay tareas programadas para este apiario.',
+    'detail.edit_task': 'Editar Tarea',
+    'detail.confirm_delete_task': '¿Estás seguro de que deseas eliminar esta tarea?',
+
     // Dashboard
+    // Fix: Removed duplicate keys that were causing object literal errors.
     'dash.welcome': 'Hola',
     'dash.schedule': 'Aquí está tu agenda para hoy.',
     'dash.system_online': 'Sistema en Línea',
@@ -302,6 +342,7 @@ const translations: Record<Language, Record<string, string>> = {
     'status.active': 'Activo',
     'status.disabled': 'Desactivado',
     'status.pending': 'Pendiente',
+    'status.completed': 'Completado',
 
     // Queen Status
     'queen.virgin': 'Virgen',

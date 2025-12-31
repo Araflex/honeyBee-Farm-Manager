@@ -89,6 +89,10 @@ export const actualizarLog = async (id: string, updates: Partial<WorkLog>): Prom
     return { ...INITIAL_LOGS.find(l => l.id === id)!, ...updates } as WorkLog;
 };
 
+export const eliminarLog = async (id: string): Promise<void> => {
+    await delay(300);
+};
+
 export const obtenerUsuarios = async (): Promise<User[]> => {
     await delay(300);
     return [...INITIAL_USERS];

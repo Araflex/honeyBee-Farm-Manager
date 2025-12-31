@@ -17,6 +17,7 @@ interface AppContextType extends AppState {
   promoteNucleus: (nucleusId: string, targetPalletId: string, chamberCount: number) => void;
   addLog: (log: WorkLog) => void;
   updateLog: (id: string, updates: Partial<WorkLog>) => void;
+  removeLog: (id: string) => void;
   
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
@@ -311,10 +312,19 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
     if (updates.status) registrarAuditoria(EntityType.LOG, id, ActionType.UPDATE, `Estado de registro: ${updates.status}`);
   };
 
+  const removeLog = (id: string) => {
+      const log = logs.find(l => l.id === id);
+      if (log) {
+          api.eliminarLog(id);
+          setLogs(prev => prev.filter(l => l.id !== id));
+          registrarAuditoria(EntityType.LOG, id, ActionType.DELETE, `Eliminó registro de trabajo: ${log.type}`);
+      }
+  };
+
   return (
     <AppContext.Provider value={{
       apiaries, pallets, hives, nuclei, logs, currentUser, users, auditLogs,
-      addApiary, updateApiary, addPallet, addHive, updateHive, removeHive, moveHive, addNucleus, updateNucleus, promoteNucleus, addLog, updateLog, 
+      addApiary, updateApiary, addPallet, addHive, updateHive, removeHive, moveHive, addNucleus, updateNucleus, promoteNucleus, addLog, updateLog, removeLog, 
       login, logout, updateUser, adminAddUser, adminToggleUserStatus, recoverPassword
     }}>
       {children}
