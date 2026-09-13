@@ -1,62 +1,51 @@
-
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Users, UserPlus, Ban, CheckCircle, Mail, Shield, Eye, Calendar, MapPin, CreditCard, Phone, User as UserIcon } from 'lucide-react';
-import { UserStatus, User } from '../types';
-
+import { UserStatus } from '../types';
 const UserManagement = () => {
-  const { users, adminAddUser, adminToggleUserStatus } = useApp();
-  const { t } = useLanguage();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  
-  const [newUser, setNewUser] = useState<Partial<User>>({ 
-      email: '', name: '', lastname: '', username: '', role: 'beekeeper', country: '', passport: '', dateOfBirth: ''
-  });
-
-  const handleAddUser = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newUser.email || !newUser.username) return;
-
-    const userToAdd: User = {
-        id: `u${Date.now()}`,
-        username: newUser.username!,
-        name: newUser.name!,
-        lastname: newUser.lastname || '',
-        email: newUser.email!,
-        role: newUser.role as 'admin' | 'beekeeper',
-        status: UserStatus.PENDING,
-        passport: newUser.passport,
-        country: newUser.country,
-        dateOfBirth: newUser.dateOfBirth,
-        password: 'password123', // Default
-        phone: newUser.phone
+    const { users, adminAddUser, adminToggleUserStatus } = useApp();
+    const { t } = useLanguage();
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [newUser, setNewUser] = useState({
+        email: '', name: '', lastname: '', username: '', role: 'beekeeper', country: '', passport: '', dateOfBirth: ''
+    });
+    const handleAddUser = (e) => {
+        e.preventDefault();
+        if (!newUser.email || !newUser.username)
+            return;
+        const userToAdd = {
+            id: `u${Date.now()}`,
+            username: newUser.username,
+            name: newUser.name,
+            lastname: newUser.lastname || '',
+            email: newUser.email,
+            role: newUser.role,
+            status: UserStatus.PENDING,
+            passport: newUser.passport,
+            country: newUser.country,
+            dateOfBirth: newUser.dateOfBirth,
+            password: 'password123', // Default
+            phone: newUser.phone
+        };
+        adminAddUser(userToAdd);
+        setIsModalOpen(false);
+        setNewUser({ email: '', name: '', lastname: '', username: '', role: 'beekeeper', country: '', passport: '', dateOfBirth: '' });
     };
-
-    adminAddUser(userToAdd);
-    setIsModalOpen(false);
-    setNewUser({ email: '', name: '', lastname: '', username: '', role: 'beekeeper', country: '', passport: '', dateOfBirth: '' });
-  };
-
-  const openViewModal = (user: User) => {
-      setSelectedUser(user);
-      setIsViewModalOpen(true);
-  };
-
-  return (
-    <div className="p-6 space-y-6 animate-fade-in">
+    const openViewModal = (user) => {
+        setSelectedUser(user);
+        setIsViewModalOpen(true);
+    };
+    return (<div className="p-6 space-y-6 animate-fade-in">
       <div className="flex justify-between items-center">
         <div>
             <h1 className="text-3xl font-bold text-amber-900">{t('users.title')}</h1>
             <p className="text-slate-600">{t('users.subtitle')}</p>
         </div>
-        <button 
-            onClick={() => setIsModalOpen(true)}
-            className="bg-amber-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-amber-700 transition-colors shadow-sm"
-        >
-            <UserPlus size={20} /> {t('users.invite')}
+        <button onClick={() => setIsModalOpen(true)} className="bg-amber-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-amber-700 transition-colors shadow-sm">
+            <UserPlus size={20}/> {t('users.invite')}
         </button>
       </div>
 
@@ -71,12 +60,7 @@ const UserManagement = () => {
                   </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                  {users.map(user => (
-                      <tr 
-                        key={user.id} 
-                        className="hover:bg-amber-50 transition-colors cursor-pointer group"
-                        onClick={() => openViewModal(user)}
-                      >
+                  {users.map(user => (<tr key={user.id} className="hover:bg-amber-50 transition-colors cursor-pointer group" onClick={() => openViewModal(user)}>
                           <td className="p-4">
                               <div className="flex items-center gap-3">
                                   <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-bold group-hover:bg-amber-200 group-hover:text-amber-800 transition-colors">
@@ -91,45 +75,37 @@ const UserManagement = () => {
                           <td className="p-4">
                               <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide
                                 ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-                                  {user.role === 'admin' && <Shield size={12} />} {user.role}
+                                  {user.role === 'admin' && <Shield size={12}/>} {user.role}
                               </span>
                           </td>
                           <td className="p-4">
                               <span className={`px-2.5 py-1 rounded-full text-xs font-semibold
-                                ${user.status === UserStatus.ACTIVE ? 'bg-green-100 text-green-700' : 
-                                  user.status === UserStatus.DISABLED ? 'bg-red-100 text-red-700' : 
-                                  'bg-orange-100 text-orange-700'}`}>
+                                ${user.status === UserStatus.ACTIVE ? 'bg-green-100 text-green-700' :
+                user.status === UserStatus.DISABLED ? 'bg-red-100 text-red-700' :
+                    'bg-orange-100 text-orange-700'}`}>
                                   {t(`status.${user.status.toLowerCase()}`)}
                               </span>
                           </td>
                           <td className="p-4 text-right">
                               <div className="flex justify-end items-center gap-2" onClick={e => e.stopPropagation()}>
-                                  {user.role !== 'admin' && (
-                                      <button 
-                                          onClick={() => adminToggleUserStatus(user.id)}
-                                          className={`p-2 rounded-full border transition-colors
-                                          ${user.status === UserStatus.ACTIVE 
-                                              ? 'border-red-200 text-red-600 hover:bg-red-50' 
-                                              : 'border-green-200 text-green-600 hover:bg-green-50'}`}
-                                          title={user.status === UserStatus.ACTIVE ? t('users.disable') : t('users.enable')}
-                                      >
-                                          {user.status === UserStatus.ACTIVE ? <Ban size={16} /> : <CheckCircle size={16} />}
-                                      </button>
-                                  )}
+                                  {user.role !== 'admin' && (<button onClick={() => adminToggleUserStatus(user.id)} className={`p-2 rounded-full border transition-colors
+                                          ${user.status === UserStatus.ACTIVE
+                    ? 'border-red-200 text-red-600 hover:bg-red-50'
+                    : 'border-green-200 text-green-600 hover:bg-green-50'}`} title={user.status === UserStatus.ACTIVE ? t('users.disable') : t('users.enable')}>
+                                          {user.status === UserStatus.ACTIVE ? <Ban size={16}/> : <CheckCircle size={16}/>}
+                                      </button>)}
                                   <button onClick={() => openViewModal(user)} className="text-slate-400 hover:text-amber-600 p-2">
-                                    <Eye size={18} />
+                                    <Eye size={18}/>
                                   </button>
                               </div>
                           </td>
-                      </tr>
-                  ))}
+                      </tr>))}
               </tbody>
           </table>
       </div>
 
       {/* Add User Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      {isModalOpen && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6 overflow-y-auto max-h-[90vh]">
                 <h2 className="text-xl font-bold text-slate-800 mb-6 border-b pb-4">{t('modal.invite_user')}</h2>
                 <form onSubmit={handleAddUser} className="space-y-6">
@@ -140,15 +116,15 @@ const UserManagement = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">{t('profile.username')}</label>
-                                    <input required className="w-full border rounded-lg px-3 py-2" value={newUser.username} onChange={e => setNewUser({...newUser, username: e.target.value})} placeholder="jdoe" />
+                                    <input required className="w-full border rounded-lg px-3 py-2" value={newUser.username} onChange={e => setNewUser({ ...newUser, username: e.target.value })} placeholder="jdoe"/>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">{t('profile.email')}</label>
-                                    <input required type="email" className="w-full border rounded-lg px-3 py-2" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} placeholder="john@example.com" />
+                                    <input required type="email" className="w-full border rounded-lg px-3 py-2" value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} placeholder="john@example.com"/>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">{t('users.role')}</label>
-                                    <select className="w-full border rounded-lg px-3 py-2" value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value as any})}>
+                                    <select className="w-full border rounded-lg px-3 py-2" value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })}>
                                         <option value="beekeeper">Beekeeper</option>
                                         <option value="admin">Administrator</option>
                                     </select>
@@ -162,27 +138,27 @@ const UserManagement = () => {
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">{t('profile.full_name')}</label>
-                                    <input required className="w-full border rounded-lg px-3 py-2" value={newUser.name} onChange={e => setNewUser({...newUser, name: e.target.value})} placeholder="John" />
+                                    <input required className="w-full border rounded-lg px-3 py-2" value={newUser.name} onChange={e => setNewUser({ ...newUser, name: e.target.value })} placeholder="John"/>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">{t('profile.lastname')}</label>
-                                    <input className="w-full border rounded-lg px-3 py-2" value={newUser.lastname} onChange={e => setNewUser({...newUser, lastname: e.target.value})} placeholder="Doe" />
+                                    <input className="w-full border rounded-lg px-3 py-2" value={newUser.lastname} onChange={e => setNewUser({ ...newUser, lastname: e.target.value })} placeholder="Doe"/>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">{t('profile.passport')}</label>
-                                    <input className="w-full border rounded-lg px-3 py-2" value={newUser.passport} onChange={e => setNewUser({...newUser, passport: e.target.value})} />
+                                    <input className="w-full border rounded-lg px-3 py-2" value={newUser.passport} onChange={e => setNewUser({ ...newUser, passport: e.target.value })}/>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">{t('profile.dob')}</label>
-                                    <input type="date" className="w-full border rounded-lg px-3 py-2" value={newUser.dateOfBirth} onChange={e => setNewUser({...newUser, dateOfBirth: e.target.value})} />
+                                    <input type="date" className="w-full border rounded-lg px-3 py-2" value={newUser.dateOfBirth} onChange={e => setNewUser({ ...newUser, dateOfBirth: e.target.value })}/>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">{t('profile.country')}</label>
-                                    <input className="w-full border rounded-lg px-3 py-2" value={newUser.country} onChange={e => setNewUser({...newUser, country: e.target.value})} placeholder="Canada" />
+                                    <input className="w-full border rounded-lg px-3 py-2" value={newUser.country} onChange={e => setNewUser({ ...newUser, country: e.target.value })} placeholder="Canada"/>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">{t('profile.phone')}</label>
-                                    <input className="w-full border rounded-lg px-3 py-2" value={newUser.phone} onChange={e => setNewUser({...newUser, phone: e.target.value})} placeholder="+1 555 0000" />
+                                    <input className="w-full border rounded-lg px-3 py-2" value={newUser.phone} onChange={e => setNewUser({ ...newUser, phone: e.target.value })} placeholder="+1 555 0000"/>
                                 </div>
                              </div>
                         </div>
@@ -194,15 +170,13 @@ const UserManagement = () => {
                     </div>
                 </form>
             </div>
-        </div>
-      )}
+        </div>)}
 
       {/* View Profile Modal */}
-      {isViewModalOpen && selectedUser && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      {isViewModalOpen && selectedUser && (<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
               <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden relative">
                   <button onClick={() => setIsViewModalOpen(false)} className="absolute top-4 right-4 text-white/80 hover:text-white z-10">
-                      <div className="bg-black/20 p-1 rounded-full"><Users size={20} /></div>
+                      <div className="bg-black/20 p-1 rounded-full"><Users size={20}/></div>
                   </button>
                   
                   {/* Header */}
@@ -256,10 +230,7 @@ const UserManagement = () => {
                       </button>
                   </div>
               </div>
-          </div>
-      )}
-    </div>
-  );
+          </div>)}
+    </div>);
 };
-
 export default UserManagement;
